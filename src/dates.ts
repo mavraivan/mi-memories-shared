@@ -52,3 +52,31 @@ export function sameMonthDay(value: string, day: Date = new Date()): boolean {
   const parsed = parseISO(value);
   return getMonth(parsed) === getMonth(day) && getDate(parsed) === getDate(day);
 }
+
+/** Whole years between the source date and its next occurrence. */
+export function yearsAt(date: string, occurrence: Date): number {
+  return occurrence.getFullYear() - parseISO(date).getFullYear();
+}
+
+/** "04.02.2014" -> "2014-02-04". */
+export function dmyToIso(value: string): string {
+  const match = /^(\d{1,2})\.(\d{1,2})\.(\d{4})\.?$/.exec(value.trim());
+  if (!match) {
+    throw new Error(`Not a DD.MM.YYYY date: ${value}`);
+  }
+  const [, day, month, year] = match;
+  return `${year}-${month!.padStart(2, '0')}-${day!.padStart(2, '0')}`;
+}
+
+/** "2014-02-04" -> "04.02.2014". */
+export function isoToDmy(value: string): string {
+  const [year, month, day] = value.slice(0, 10).split('-');
+  return `${day}.${month}.${year}`;
+}
+
+/** Local calendar day as YYYY-MM-DD. */
+export function isoDay(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}

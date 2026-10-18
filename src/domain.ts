@@ -16,7 +16,7 @@ export type PlanStatus = 'open' | 'doing' | 'done';
 export type DateRecurrence = 'none' | 'yearly' | 'monthly' | 'weekly';
 export type LocationKind = 'visited' | 'planned' | 'wishlist' | 'memory';
 export type NotificationType =
-  | 'important_date'
+  | 'date'
   | 'reminder'
   | 'message'
   | 'reaction'
@@ -48,6 +48,8 @@ export type MemoryMedia = {
   kind: Exclude<MediaKind, 'text'>;
   url: string;
   thumbnailUrl: string;
+  storagePath?: string;
+  mimeType?: string;
   width?: number;
   height?: number;
   durationMs?: number;
@@ -146,11 +148,20 @@ export type Plan = {
   items: PlanItem[];
 };
 
+export type ImportantDateKind =
+  | 'anniversary'
+  | 'birthday'
+  | 'engagement'
+  | 'wedding'
+  | 'evening'
+  | 'other';
+
 export type ImportantDate = {
   id: Id;
   title: string;
   date: string;
   recurrence: DateRecurrence;
+  kind?: ImportantDateKind;
   note?: string;
   reminderOffsets: number[];
   owner: 'both' | Id;
@@ -158,12 +169,37 @@ export type ImportantDate = {
   planId?: Id;
 };
 
+export type ImportantDateInput = Omit<ImportantDate, 'id'>;
+
+export type ReminderCategory =
+  | 'anniversary'
+  | 'birthdays'
+  | 'trips'
+  | 'on_this_day'
+  | 'unfinished_memories'
+  | 'ai_suggestions'
+  | 'game';
+
 export type ReminderRule = {
   id: Id;
-  category: string;
+  category: ReminderCategory | string;
   title: string;
   enabled: boolean;
   offsetLabel: string;
+};
+
+export type ScheduledNotification = {
+  id: Id;
+  userId: Id;
+  type: NotificationType;
+  title: string;
+  body: string;
+  deepLink?: string;
+  entityType?: string;
+  entityId?: Id;
+  scheduledAt: string;
+  occurrenceKey: string;
+  status: 'pending' | 'sending' | 'sent' | 'failed' | 'cancelled';
 };
 
 export type AppNotification = {
@@ -232,6 +268,8 @@ export type TimelineEntry = {
     | 'plan'
     | 'chapter';
   imageUrl?: string;
+  entityType?: 'memory' | 'trip' | 'date';
+  entityId?: Id;
 };
 
 export type GameAchievement = {
@@ -248,8 +286,48 @@ export type GameProfile = {
   chapterIndex: number;
   chapterCount: number;
   achievements: GameAchievement[];
-  deepLink: string;
-  storeUrl: string;
+};
+
+export type AiCitation = {
+  type: 'memory' | 'trip';
+  id: Id;
+  title: string;
+  date?: string;
+  imageUrl?: string;
+};
+
+export type AiItineraryDay = {
+  day: number;
+  title: string;
+  items: string[];
+};
+
+export type AiCard =
+  | { type: 'itinerary'; destination: string; days: AiItineraryDay[] }
+  | {
+      type: 'expense';
+      month: string;
+      totalCents: number;
+      byCategory: { category: ExpenseCategory; cents: number }[];
+    };
+
+export type AiWriteKind = 'plan' | 'trip' | 'important_date' | 'wishlist';
+
+export type AiProposedWrite = {
+  kind: AiWriteKind;
+  summary: string;
+  payload: Record<string, unknown>;
+};
+
+export type AiSource = 'gemini' | 'database';
+
+export type AiReply = {
+  reply: string;
+  citations: AiCitation[];
+  cards: AiCard[];
+  proposedWrites: AiProposedWrite[];
+  confirmationRequired?: boolean;
+  source: AiSource;
 };
 
 export type AiMessage = {
@@ -257,6 +335,10 @@ export type AiMessage = {
   role: 'user' | 'assistant';
   body: string;
   createdAt: string;
+  citations?: AiCitation[];
+  cards?: AiCard[];
+  proposedWrites?: AiProposedWrite[];
+  source?: AiSource;
 };
 
 export type CursorPage<T> = {
@@ -282,3 +364,112 @@ export type CreateMemoryInput = {
   showOnTimeline: boolean;
   memoryKind: MemoryKind;
 };
+
+/** The full form state; media lists the final set, anything missing is removed. */
+export type UpdateMemoryInput = CreateMemoryInput;
+
+export type PlanInput = {
+  title: string;
+  notes: string;
+  type: PlanType;
+  status: PlanStatus;
+  date?: string;
+  locationLabel?: string;
+  tripId?: Id;
+  assignees: Id[];
+  items: string[];
+};
+
+export type TripPatch = Partial<Pick<Trip, 'status' | 'favorite'>>;
+
+export type ExpenseCategory =
+  | 'food'
+  | 'household'
+  | 'cosmetics'
+  | 'fuel'
+  | 'medicine'
+  | 'restaurants'
+  | 'other';
+
+export type ExpenseSource = 'scan' | 'manual';
+
+export type ExpenseItem = {
+  id: Id;
+  invoiceId: Id;
+  name: string;
+  amountCents: number;
+  category: ExpenseCategory;
+};
+
+export type ExpenseInvoice = {
+  id: Id;
+  spaceId: Id;
+  createdBy: Id;
+  store: string;
+  purchasedOn: string;
+  purchasedAt?: string;
+  totalCents: number;
+  currency: 'EUR';
+  source: ExpenseSource;
+  imagePath?: string;
+  items: ExpenseItem[];
+  createdAt: string;
+};
+
+export type ExpenseInvoiceInput = {
+  store: string;
+  purchasedOn: string;
+  purchasedAt?: string;
+  totalCents: number;
+  source: ExpenseSource;
+  imagePath?: string;
+  items: { name: string; amountCents: number; category: ExpenseCategory }[];
+};
+
+export type ExpenseFixed = {
+  id: Id;
+  spaceId: Id;
+  name: string;
+  amountCents: number;
+  dayOfMonth: number;
+  category: ExpenseCategory;
+  enabled: boolean;
+};
+
+export type ExpenseFixedInput = Omit<ExpenseFixed, 'id' | 'spaceId'>;
+
+export type ExpenseBudget = {
+  id: Id;
+  spaceId: Id;
+  month: string;
+  amountCents: number;
+};
+
+export type ExpenseBadgeId = 'budget_master' | 'scan_streak' | 'saver_week';
+
+export type ExpenseBadge = {
+  id: ExpenseBadgeId;
+  unlocked: boolean;
+  unlockedAt?: string;
+  current: number;
+  target: number;
+};
+
+export type ReceiptLine = {
+  name: string;
+  amountCents: number;
+  category: ExpenseCategory;
+};
+
+export type ReceiptResult =
+  | {
+      status: 'ok';
+      store: string;
+      date: string;
+      time?: string;
+      totalCents: number;
+      items: ReceiptLine[];
+      imagePath: string;
+    }
+  | { status: 'unreadable'; imagePath: string }
+  | { status: 'unavailable'; imagePath: string };
