@@ -6,8 +6,10 @@ import type {
 
 export const LIMITS = {
   pairMembers: 2,
-  memoryPage: 12,
-  chatPage: 80,
+  /** One page of a long list. The cursor is `(order, id)`, never a date alone. */
+  page: 20,
+  memoryPage: 20,
+  chatPage: 20,
   aiMessageMax: 4000,
   passwordMin: 6,
   itineraryDaysMax: 21,
@@ -24,11 +26,20 @@ export const CURRENCY = 'EUR' as const;
 
 export const EXPENSE_CATEGORIES: readonly ExpenseCategory[] = [
   'food',
-  'household',
-  'cosmetics',
-  'fuel',
-  'medicine',
   'restaurants',
+  'household',
+  'bills',
+  'fuel',
+  'transport',
+  'cosmetics',
+  'health',
+  'clothing',
+  'entertainment',
+  'subscriptions',
+  'travel',
+  'gifts',
+  'pets',
+  'education',
   'other',
 ] as const;
 

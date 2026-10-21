@@ -7,6 +7,7 @@ import type {
   ExpenseFixed,
   ExpenseInvoice,
   ExpenseItem,
+  ExpenseOverview,
 } from './domain';
 
 /** "2026-10-16" -> "2026-10". */
@@ -90,7 +91,7 @@ export function fixedOccurrences(
     }));
 }
 
-function invoiceCategories(
+export function invoiceCategories(
   invoice: ExpenseInvoice,
 ): { category: ExpenseCategory; cents: number }[] {
   if (invoice.items.length === 0) {
@@ -105,6 +106,32 @@ function invoiceCategories(
     lines.push({ category: 'other', cents: rest });
   }
   return lines;
+}
+
+export function summarizeInvoices(invoices: ExpenseInvoice[]): ExpenseOverview {
+  const totalCents = invoices.reduce(
+    (total, invoice) => total + invoice.totalCents,
+    0,
+  );
+  const amounts = new Map<ExpenseCategory, number>();
+  for (const invoice of invoices) {
+    for (const line of invoiceCategories(invoice)) {
+      amounts.set(
+        line.category,
+        (amounts.get(line.category) ?? 0) + line.cents,
+      );
+    }
+  }
+  return {
+    totalCents,
+    byCategory: EXPENSE_CATEGORIES.map(category => ({
+      category,
+      cents: amounts.get(category) ?? 0,
+      share: totalCents > 0 ? (amounts.get(category) ?? 0) / totalCents : 0,
+    }))
+      .filter(entry => entry.cents > 0)
+      .sort((a, b) => b.cents - a.cents),
+  };
 }
 
 export type CategoryTotal = {

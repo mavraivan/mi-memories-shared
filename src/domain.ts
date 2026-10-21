@@ -384,12 +384,35 @@ export type TripPatch = Partial<Pick<Trip, 'status' | 'favorite'>>;
 
 export type ExpenseCategory =
   | 'food'
-  | 'household'
-  | 'cosmetics'
-  | 'fuel'
-  | 'medicine'
   | 'restaurants'
+  | 'household'
+  | 'bills'
+  | 'fuel'
+  | 'transport'
+  | 'cosmetics'
+  | 'health'
+  | 'clothing'
+  | 'entertainment'
+  | 'subscriptions'
+  | 'travel'
+  | 'gifts'
+  | 'pets'
+  | 'education'
   | 'other';
+
+export type ExpenseCategorization = {
+  categories: ExpenseCategory[];
+  source: 'gemini' | 'fallback';
+};
+
+export type ExpenseOverview = {
+  totalCents: number;
+  byCategory: {
+    category: ExpenseCategory;
+    cents: number;
+    share: number;
+  }[];
+};
 
 export type ExpenseSource = 'scan' | 'manual';
 
@@ -471,5 +494,6 @@ export type ReceiptResult =
       items: ReceiptLine[];
       imagePath: string;
     }
-  | { status: 'unreadable'; imagePath: string }
-  | { status: 'unavailable'; imagePath: string };
+  | { status: 'unreadable'; imagePath: string; reason?: string }
+  | { status: 'unavailable'; imagePath: string; reason?: string }
+  | { status: 'failed'; imagePath: string; reason: string };

@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   daysUntil,
+  encodeCursor,
   loginSchema,
   occurrenceKey,
+  pageBy,
   paginate,
   sameMonthDay,
   storagePath,
@@ -25,6 +27,27 @@ test('pagination cursor stops on the last page', () => {
   );
   assert.equal(page.nextCursor, 'b');
   assert.equal(paginate(items, 'b', 2).nextCursor, null);
+});
+
+test('a repeated timestamp does not drop the next row', () => {
+  const items = [
+    { id: 'a', at: '2024-06-01T00:00:00.000Z' },
+    { id: 'b', at: '2024-06-01T00:00:00.000Z' },
+    { id: 'c', at: '2024-06-02T00:00:00.000Z' },
+  ];
+  const first = pageBy(items, null, item => item.at, 1, 'desc');
+  assert.deepEqual(
+    first.items.map(item => item.id),
+    ['c'],
+  );
+  const second = pageBy(items, first.nextCursor, item => item.at, 1, 'desc');
+  const third = pageBy(items, second.nextCursor, item => item.at, 1, 'desc');
+  assert.deepEqual([second.items[0]?.id, third.items[0]?.id].sort(), [
+    'a',
+    'b',
+  ]);
+  assert.equal(third.nextCursor, null);
+  assert.ok(encodeCursor('2024-06-01', 'a').includes('a'));
 });
 
 test('same calendar day matches across years', () => {

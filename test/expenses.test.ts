@@ -205,7 +205,7 @@ test('receipt and invoice schemas reject invented shapes', () => {
       purchasedOn: '2026-10-16',
       totalCents: 100,
       source: 'manual',
-      items: [{ name: 'x', amountCents: 100, category: 'pets' }],
+      items: [{ name: 'x', amountCents: 100, category: 'unknown' }],
     }).success,
     false,
   );

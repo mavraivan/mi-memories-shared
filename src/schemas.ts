@@ -62,6 +62,25 @@ const timeSchema = z.string().regex(/^\d{2}:\d{2}$/);
 export const receiptBody = z.object({
   storagePath: z.string().min(3).max(512),
   locale: z.enum(['hr', 'en']).optional(),
+  mimeType: z.string().max(80).optional(),
+});
+
+export const expenseCategorizeBody = z.object({
+  store: z.string().trim().max(120).optional(),
+  locale: z.enum(['hr', 'en']).optional(),
+  items: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(120),
+        amountCents: z.number().int().optional(),
+      }),
+    )
+    .min(1)
+    .max(200),
+});
+
+export const expenseCategorizationSchema = z.object({
+  categories: z.array(expenseCategorySchema),
 });
 
 export const receiptLineSchema = z.object({
