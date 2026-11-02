@@ -7,9 +7,20 @@ import {
   occurrenceKey,
   pageBy,
   paginate,
+  replyWithoutRecordIds,
   sameMonthDay,
   storagePath,
 } from '../src/index';
+
+test('a reply never shows record ids', () => {
+  assert.equal(
+    replyWithoutRecordIds(
+      'brvnaru s jacuzzijem [09624961-afa7-479b-8198-8c01d38e1d76, 3f850de1-162a-4e35-a5d4-e5416752c6e6]. Tamo možete uživati.',
+    ),
+    'brvnaru s jacuzzijem. Tamo možete uživati.',
+  );
+  assert.equal(replyWithoutRecordIds('Samo tekst.'), 'Samo tekst.');
+});
 
 test('occurrence key stays stable across retries', () => {
   assert.equal(

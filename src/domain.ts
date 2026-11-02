@@ -20,6 +20,7 @@ export type NotificationType =
   | 'reminder'
   | 'message'
   | 'reaction'
+  | 'comment'
   | 'memory'
   | 'trip'
   | 'plan'
@@ -92,6 +93,10 @@ export type Memory = {
   privacy: Privacy;
   reactions: Reaction[];
   comments: MemoryComment[];
+  /** Feed rows carry counts so the list does not download every comment or file. */
+  commentCount?: number;
+  reactionCount?: number;
+  mediaCount?: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -167,6 +172,12 @@ export type ImportantDate = {
   owner: 'both' | Id;
   memoryId?: Id;
   planId?: Id;
+  /** When true, this date can drive the counter at the top of Our dates. */
+  isCounterSource?: boolean;
+  /** Glyph name. The screen falls back to one derived from `kind`. */
+  icon?: string;
+  /** Palette token (`coral`, `amber`, `lavender`, `gold`). */
+  accentColor?: string;
 };
 
 export type ImportantDateInput = Omit<ImportantDate, 'id'>;
@@ -380,7 +391,7 @@ export type PlanInput = {
   items: string[];
 };
 
-export type TripPatch = Partial<Pick<Trip, 'status' | 'favorite'>>;
+export type TripPatch = Partial<Pick<Trip, 'status' | 'favorite' | 'coverUrl'>>;
 
 export type ExpenseCategory =
   | 'food'

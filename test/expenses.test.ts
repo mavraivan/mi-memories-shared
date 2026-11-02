@@ -72,6 +72,27 @@ test('couple dates convert from DD.MM.YYYY and the anniversary is first', () => 
   );
   assert.equal(next.getFullYear(), 2026);
   assert.equal(next.getMonth(), 10);
+  const leap = nextOccurrence('2020-02-29', 'yearly', new Date(2021, 0, 15));
+  assert.equal(leap.getFullYear(), 2021);
+  assert.equal(leap.getMonth(), 1);
+  assert.equal(leap.getDate(), 28);
+  const leapDay = nextOccurrence('2020-02-29', 'yearly', new Date(2024, 1, 29));
+  assert.equal(leapDay.getMonth(), 1);
+  assert.equal(leapDay.getDate(), 29);
+  const afterLeap = nextOccurrence(
+    '2020-02-29',
+    'yearly',
+    new Date(2024, 2, 1),
+  );
+  assert.equal(afterLeap.getFullYear(), 2025);
+  assert.equal(afterLeap.getDate(), 28);
+  const clampedMonth = nextOccurrence(
+    '2020-01-31',
+    'monthly',
+    new Date(2026, 1, 10),
+  );
+  assert.equal(clampedMonth.getMonth(), 1);
+  assert.equal(clampedMonth.getDate(), 28);
 });
 
 test('months shift across years and list every day', () => {

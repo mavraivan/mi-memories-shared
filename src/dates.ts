@@ -1,10 +1,17 @@
 import {
   differenceInCalendarDays,
   getDate,
+  getDaysInMonth,
   getMonth,
   parseISO,
 } from 'date-fns';
 import type { DateRecurrence } from './domain';
+
+/** Month lengths are real. Feb 29 in a non-leap year lands on Feb 28. */
+function clampedDate(year: number, month: number, day: number): Date {
+  const last = getDaysInMonth(new Date(year, month, 1));
+  return new Date(year, month, Math.min(day, last));
+}
 
 export function parseDate(value: string): Date {
   return parseISO(value);
@@ -21,8 +28,9 @@ export function nextOccurrence(
 ): Date {
   const source = parseISO(date);
   const today = startOfToday(now);
+  const day = source.getDate();
   if (recurrence === 'none') {
-    return source;
+    return clampedDate(source.getFullYear(), source.getMonth(), day);
   }
   if (recurrence === 'weekly') {
     const next = new Date(today);
@@ -31,15 +39,20 @@ export function nextOccurrence(
     return next;
   }
   if (recurrence === 'monthly') {
-    const next = new Date(now.getFullYear(), now.getMonth(), source.getDate());
+    let next = clampedDate(today.getFullYear(), today.getMonth(), day);
     if (next < today) {
-      next.setMonth(next.getMonth() + 1);
+      const month = today.getMonth() + 1;
+      next = clampedDate(
+        today.getFullYear() + Math.floor(month / 12),
+        month % 12,
+        day,
+      );
     }
     return next;
   }
-  const next = new Date(now.getFullYear(), source.getMonth(), source.getDate());
+  let next = clampedDate(today.getFullYear(), source.getMonth(), day);
   if (next < today) {
-    next.setFullYear(next.getFullYear() + 1);
+    next = clampedDate(today.getFullYear() + 1, source.getMonth(), day);
   }
   return next;
 }
