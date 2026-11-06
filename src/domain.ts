@@ -358,6 +358,8 @@ export type CursorPage<T> = {
 };
 
 export type CreateMemoryInput = {
+  /** Chosen once per composer, so a retried save cannot make a second memory. */
+  clientId?: Id;
   kind: MediaKind;
   title: string;
   body: string;
