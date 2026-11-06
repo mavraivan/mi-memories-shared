@@ -10,6 +10,7 @@ import {
   replyWithoutRecordIds,
   sameMonthDay,
   storagePath,
+  receiptBody,
 } from '../src/index';
 
 test('a reply never shows record ids', () => {
@@ -88,11 +89,38 @@ test('storage path is space scoped', () => {
 
 test('login schema trims email and rejects a short password', () => {
   assert.equal(
-    loginSchema.parse({ email: '  ivan@mi.app ', password: 'tajna1' }).email,
-    'ivan@mi.app',
+    loginSchema.parse({ email: '  ana@mi.app ', password: 'tajna1' }).email,
+    'ana@mi.app',
   );
   assert.equal(
-    loginSchema.safeParse({ email: 'ivan@mi.app', password: '123' }).success,
+    loginSchema.safeParse({ email: 'ana@mi.app', password: '123' }).success,
     false,
   );
+});
+
+test('a receipt path is one object inside a space', () => {
+  const space = '11111111-2222-4333-8444-555555555555';
+  const entity = '66666666-7777-4888-9999-000000000000';
+  const ok = `${space}/receipts/${entity}/0-1730000000000.jpg`;
+  assert.equal(receiptBody.safeParse({ storagePath: ok }).success, true);
+  for (const storagePath of [
+    `${space}/receipts/${entity}/%2e%2e/%2e%2e/a.jpg`,
+    `${space}/receipts/%2e%2e/${entity}/a.jpg`,
+    `${space}/receipts/${entity}/.%2E/a.jpg`,
+    `${space}/receipts/${entity}/a%2fb.jpg`,
+    `${space}/receipts/${entity}/../a.jpg`,
+    `${space}/receipts/${entity}/..jpg`,
+    `${space}/receipts/${entity}/a.jpg?x=1`,
+    `${space}/receipts/${entity}/a.jpg#x`,
+    `${space}/receipts/${entity}/a\\b.jpg`,
+    `${space}/memories/${entity}/a.jpg`,
+    `${space}/receipts/a.jpg`,
+    'space/receipts/a.jpg',
+  ]) {
+    assert.equal(
+      receiptBody.safeParse({ storagePath }).success,
+      false,
+      storagePath,
+    );
+  }
 });

@@ -71,7 +71,7 @@ export function yearsAt(date: string, occurrence: Date): number {
   return occurrence.getFullYear() - parseISO(date).getFullYear();
 }
 
-/** "04.02.2014" -> "2014-02-04". */
+/** "03.06.2011" -> "2011-06-03". */
 export function dmyToIso(value: string): string {
   const match = /^(\d{1,2})\.(\d{1,2})\.(\d{4})\.?$/.exec(value.trim());
   if (!match) {
@@ -81,7 +81,7 @@ export function dmyToIso(value: string): string {
   return `${year}-${month!.padStart(2, '0')}-${day!.padStart(2, '0')}`;
 }
 
-/** "2014-02-04" -> "04.02.2014". */
+/** "2011-06-03" -> "03.06.2011". */
 export function isoToDmy(value: string): string {
   const [year, month, day] = value.slice(0, 10).split('-');
   return `${day}.${month}.${year}`;

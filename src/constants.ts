@@ -1,8 +1,4 @@
-import type {
-  ExpenseCategory,
-  ImportantDateKind,
-  ReminderCategory,
-} from './domain';
+import type { ExpenseCategory, ReminderCategory } from './domain';
 
 export const LIMITS = {
   pairMembers: 2,
@@ -56,60 +52,6 @@ export const REMINDER_CATEGORIES: readonly ReminderCategory[] = [
 ] as const;
 
 export const RECEIPTS_BUCKET = 'receipts';
-
-export type CoupleDateSeed = {
-  key: string;
-  title: string;
-  /** DD.MM.YYYY, the way the couple writes it. */
-  dmy: string;
-  kind: ImportantDateKind;
-  owner: 'both' | 'mateja' | 'ivan';
-  timelineKind: 'origin' | 'milestone';
-};
-
-/** The first entry is the space anniversary. */
-export const COUPLE_DATES: readonly CoupleDateSeed[] = [
-  {
-    key: 'beginning',
-    title: 'Početak',
-    dmy: '04.02.2014',
-    kind: 'anniversary',
-    owner: 'both',
-    timelineKind: 'origin',
-  },
-  {
-    key: 'mateja_birthday',
-    title: 'Matejin rođendan',
-    dmy: '15.11.1995',
-    kind: 'birthday',
-    owner: 'mateja',
-    timelineKind: 'milestone',
-  },
-  {
-    key: 'ivan_birthday',
-    title: 'Ivanov rođendan',
-    dmy: '18.11.1993',
-    kind: 'birthday',
-    owner: 'ivan',
-    timelineKind: 'milestone',
-  },
-  {
-    key: 'engagement',
-    title: 'Zaruke',
-    dmy: '04.03.2022',
-    kind: 'engagement',
-    owner: 'both',
-    timelineKind: 'milestone',
-  },
-  {
-    key: 'wedding',
-    title: 'Svadba',
-    dmy: '07.10.2023',
-    kind: 'wedding',
-    owner: 'both',
-    timelineKind: 'milestone',
-  },
-] as const;
 
 export const DEFAULT_REMINDER_OFFSETS = [30, 7, 0] as const;
 

@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  COUPLE_DATES,
   compareMonths,
   computeBadges,
   dailySeries,
@@ -58,15 +57,13 @@ const rent: ExpenseFixed = {
   enabled: true,
 };
 
-test('couple dates convert from DD.MM.YYYY and the anniversary is first', () => {
-  assert.equal(COUPLE_DATES.length, 5);
-  assert.equal(COUPLE_DATES[0]?.key, 'beginning');
-  assert.equal(dmyToIso('04.02.2014'), '2014-02-04');
-  assert.equal(dmyToIso('7.10.2023.'), '2023-10-07');
-  assert.equal(isoToDmy('1995-11-15'), '15.11.1995');
-  assert.throws(() => dmyToIso('2014-02-04'));
+test('dates convert from DD.MM.YYYY', () => {
+  assert.equal(dmyToIso('03.06.2011'), '2011-06-03');
+  assert.equal(dmyToIso('9.4.2020.'), '2020-04-09');
+  assert.equal(isoToDmy('1990-08-21'), '21.08.1990');
+  assert.throws(() => dmyToIso('2011-06-03'));
   const next = nextOccurrence(
-    dmyToIso('18.11.1993'),
+    dmyToIso('18.11.1991'),
     'yearly',
     new Date(2026, 9, 18),
   );

@@ -39,9 +39,16 @@ export const expenseCategorySchema = z.enum(
 const isoDaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const timeSchema = z.string().regex(/^\d{2}:\d{2}$/);
 
-/** The object key must stay inside the caller's space: `{spaceId}/receipts/...`. */
+/**
+ * `{spaceId}/receipts/{uuid}/{file}`. The character set leaves no way to spell
+ * a dot segment with `%`, `?`, `#` or a backslash once this becomes a URL.
+ */
+export const RECEIPT_PATH =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/receipts\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?!.*\.\.)[A-Za-z0-9._-]+$/i;
+
+/** The object key must stay inside the caller's space. */
 export const receiptBody = z.object({
-  storagePath: z.string().min(3).max(512),
+  storagePath: z.string().max(512).regex(RECEIPT_PATH),
   locale: z.enum(['hr', 'en']).optional(),
   mimeType: z.string().max(80).optional(),
 });
