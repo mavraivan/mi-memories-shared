@@ -32,6 +32,10 @@ export function nextOccurrence(
   if (recurrence === 'none') {
     return clampedDate(source.getFullYear(), source.getMonth(), day);
   }
+  // Nothing repeats before it starts. public.next_occurrence has the same rule.
+  if (source > today) {
+    return source;
+  }
   if (recurrence === 'weekly') {
     const next = new Date(today);
     const delta = (source.getDay() - next.getDay() + 7) % 7;
@@ -66,6 +70,13 @@ export function sameMonthDay(value: string, day: Date = new Date()): boolean {
   return getMonth(parsed) === getMonth(day) && getDate(parsed) === getDate(day);
 }
 
+/** The couple's calendar day. The server runs in UTC, so `isoDay` is not it. */
+export function zagrebDay(now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zagreb' }).format(
+    now,
+  );
+}
+
 /** Whole years between the source date and its next occurrence. */
 export function yearsAt(date: string, occurrence: Date): number {
   return occurrence.getFullYear() - parseISO(date).getFullYear();
@@ -79,12 +90,6 @@ export function dmyToIso(value: string): string {
   }
   const [, day, month, year] = match;
   return `${year}-${month!.padStart(2, '0')}-${day!.padStart(2, '0')}`;
-}
-
-/** "2011-06-03" -> "03.06.2011". */
-export function isoToDmy(value: string): string {
-  const [year, month, day] = value.slice(0, 10).split('-');
-  return `${day}.${month}.${year}`;
 }
 
 /** Local calendar day as YYYY-MM-DD. */

@@ -1,4 +1,5 @@
 export * from './constants';
+export * from './contract';
 export * from './dates';
 export * from './domain';
 export * from './expenses';

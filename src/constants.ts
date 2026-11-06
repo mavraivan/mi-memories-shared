@@ -1,13 +1,13 @@
-import type { ExpenseCategory, ReminderCategory } from './domain';
+import type { ExpenseCategory } from './domain';
 
 export const LIMITS = {
-  pairMembers: 2,
   /** One page of a long list. The cursor is `(order, id)`, never a date alone. */
   page: 20,
   memoryPage: 20,
   chatPage: 20,
   aiMessageMax: 4000,
-  passwordMin: 6,
+  /** A note sent for a title suggestion. Well above any note people write. */
+  memoryTextMax: 20_000,
   itineraryDaysMax: 21,
   aiContextMemories: 6,
   aiContextTrips: 3,
@@ -19,8 +19,6 @@ export const LIMITS = {
 export const COUPLE_THREAD_KIND = 'couple';
 
 export const MOCK_THREAD_ID = 'thread_main';
-
-export const CURRENCY = 'EUR' as const;
 
 export const EXPENSE_CATEGORIES: readonly ExpenseCategory[] = [
   'food',
@@ -41,19 +39,7 @@ export const EXPENSE_CATEGORIES: readonly ExpenseCategory[] = [
   'other',
 ] as const;
 
-export const REMINDER_CATEGORIES: readonly ReminderCategory[] = [
-  'anniversary',
-  'birthdays',
-  'trips',
-  'on_this_day',
-  'unfinished_memories',
-  'ai_suggestions',
-  'game',
-] as const;
-
 export const RECEIPTS_BUCKET = 'receipts';
-
-export const DEFAULT_REMINDER_OFFSETS = [30, 7, 0] as const;
 
 /** Badges the native game can unlock; the bridge screen shows every one, locked or not. */
 export const GAME_BADGES = [
@@ -66,13 +52,6 @@ export const GAME_BADGES = [
 export type GameBadgeId = (typeof GAME_BADGES)[number];
 
 export const GAME_CHAPTER_COUNT = 8;
-
-export function occurrenceKey(
-  scheduledNotificationId: string,
-  occurrence: string,
-): string {
-  return `${scheduledNotificationId}:${occurrence}`;
-}
 
 export function storagePath(
   spaceId: string,

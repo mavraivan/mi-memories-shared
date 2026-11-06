@@ -48,11 +48,7 @@ export function eurosToCents(value: number | string): number {
   return Number.isFinite(parsed) ? Math.round(Number(`${parsed}e2`)) : 0;
 }
 
-export function centsToEuros(cents: number): number {
-  return Math.round(cents) / 100;
-}
-
-export function itemsCents(items: Pick<ExpenseItem, 'amountCents'>[]): number {
+function itemsCents(items: Pick<ExpenseItem, 'amountCents'>[]): number {
   return items.reduce((sum, item) => sum + item.amountCents, 0);
 }
 
@@ -208,28 +204,6 @@ export function summarizeMonth(input: {
     byCategory,
     invoiceCount: invoices.length,
   };
-}
-
-export type CategoryComparison = {
-  category: ExpenseCategory;
-  currentCents: number;
-  previousCents: number;
-};
-
-export function compareMonths(
-  current: MonthSummary,
-  previous: MonthSummary,
-): CategoryComparison[] {
-  return EXPENSE_CATEGORIES.map(category => ({
-    category,
-    currentCents:
-      current.byCategory.find(entry => entry.category === category)?.cents ?? 0,
-    previousCents:
-      previous.byCategory.find(entry => entry.category === category)?.cents ??
-      0,
-  }))
-    .filter(entry => entry.currentCents > 0 || entry.previousCents > 0)
-    .sort((a, b) => b.currentCents - a.currentCents);
 }
 
 export function dailySeries(summary: MonthSummary): number[] {

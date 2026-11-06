@@ -9,11 +9,12 @@
   "types": "./src/index.ts",
   "sideEffects": false,
   "engines": {
-    "node": ">=22.13.0"
+    "node": "^22.13.0 || ^24.3.0 || >=26.0.0"
   },
   "scripts": {
     "test": "tsx --test test/**/*.test.ts",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint src test",
     "format": "prettier --write \"{src,test}/**/*.ts\" \"*.{js,cjs,md}\"",
     "format:check": "prettier --check \"{src,test}/**/*.ts\" \"*.{js,cjs,md}\"",
     "prepare": "node scripts/install-hooks.cjs"
@@ -23,12 +24,15 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@eslint/js": "9.39.1",
     "@types/node": "22.19.1",
+    "eslint": "9.39.1",
     "husky": "9.1.7",
     "lint-staged": "15.5.2",
     "prettier": "2.8.8",
     "tsx": "4.20.6",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.46.2"
   },
   "lint-staged": {
     "*.{ts,md}": "prettier --write"

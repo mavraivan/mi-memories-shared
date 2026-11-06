@@ -1,0 +1,151 @@
+{
+  "nextOccurrence": [
+    {
+      "source": "2011-06-03",
+      "recurrence": "yearly",
+      "today": "2026-11-06",
+      "expected": "2027-06-03"
+    },
+    {
+      "source": "2011-11-06",
+      "recurrence": "yearly",
+      "today": "2026-11-06",
+      "expected": "2026-11-06"
+    },
+    {
+      "source": "2024-02-29",
+      "recurrence": "yearly",
+      "today": "2026-02-01",
+      "expected": "2026-02-28"
+    },
+    {
+      "source": "2024-02-29",
+      "recurrence": "yearly",
+      "today": "2028-02-01",
+      "expected": "2028-02-29"
+    },
+    {
+      "source": "2026-01-31",
+      "recurrence": "monthly",
+      "today": "2026-02-10",
+      "expected": "2026-02-28"
+    },
+    {
+      "source": "2026-01-31",
+      "recurrence": "monthly",
+      "today": "2026-03-01",
+      "expected": "2026-03-31"
+    },
+    {
+      "source": "2026-01-15",
+      "recurrence": "monthly",
+      "today": "2026-12-20",
+      "expected": "2027-01-15"
+    },
+    {
+      "source": "2026-11-02",
+      "recurrence": "weekly",
+      "today": "2026-11-06",
+      "expected": "2026-11-09"
+    },
+    {
+      "source": "2026-11-06",
+      "recurrence": "weekly",
+      "today": "2026-11-06",
+      "expected": "2026-11-06"
+    },
+    {
+      "source": "2026-03-29",
+      "recurrence": "weekly",
+      "today": "2026-03-29",
+      "expected": "2026-03-29"
+    },
+    {
+      "source": "2020-05-05",
+      "recurrence": "none",
+      "today": "2026-11-06",
+      "expected": "2020-05-05"
+    },
+    {
+      "source": "2030-06-15",
+      "recurrence": "none",
+      "today": "2026-11-06",
+      "expected": "2030-06-15"
+    },
+    {
+      "source": "2030-06-15",
+      "recurrence": "yearly",
+      "today": "2026-11-06",
+      "expected": "2030-06-15"
+    },
+    {
+      "source": "2030-06-15",
+      "recurrence": "monthly",
+      "today": "2026-11-06",
+      "expected": "2030-06-15"
+    },
+    {
+      "source": "2030-06-15",
+      "recurrence": "weekly",
+      "today": "2026-11-06",
+      "expected": "2030-06-15"
+    },
+    {
+      "source": "2026-11-07",
+      "recurrence": "yearly",
+      "today": "2026-11-06",
+      "expected": "2026-11-07"
+    }
+  ],
+  "expenseOverview": [
+    {
+      "name": "lines match the printed total",
+      "invoices": [
+        {
+          "totalCents": 1000,
+          "items": [
+            { "amountCents": 700, "category": "food" },
+            { "amountCents": 300, "category": "household" }
+          ]
+        }
+      ],
+      "expected": {
+        "totalCents": 1000,
+        "byCategory": [
+          { "category": "food", "cents": 700 },
+          { "category": "household", "cents": 300 }
+        ]
+      }
+    },
+    {
+      "name": "what the lines miss goes to other",
+      "invoices": [
+        {
+          "totalCents": 1000,
+          "items": [{ "amountCents": 600, "category": "food" }]
+        },
+        { "totalCents": 250, "items": [] }
+      ],
+      "expected": {
+        "totalCents": 1250,
+        "byCategory": [
+          { "category": "other", "cents": 650 },
+          { "category": "food", "cents": 600 }
+        ]
+      }
+    },
+    {
+      "name": "lines above the printed total never make a negative other",
+      "invoices": [
+        {
+          "totalCents": 1000,
+          "items": [{ "amountCents": 1200, "category": "food" }]
+        }
+      ],
+      "expected": {
+        "totalCents": 1000,
+        "byCategory": [{ "category": "food", "cents": 1200 }]
+      }
+    }
+  ]
+}

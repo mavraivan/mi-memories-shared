@@ -1,14 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  compareMonths,
   computeBadges,
   dailySeries,
   dmyToIso,
   eurosToCents,
   expenseInvoiceInputSchema,
   fixedOccurrences,
-  isoToDmy,
   monthDays,
   nextOccurrence,
   receiptModelSchema,
@@ -60,7 +58,6 @@ const rent: ExpenseFixed = {
 test('dates convert from DD.MM.YYYY', () => {
   assert.equal(dmyToIso('03.06.2011'), '2011-06-03');
   assert.equal(dmyToIso('9.4.2020.'), '2020-04-09');
-  assert.equal(isoToDmy('1990-08-21'), '21.08.1990');
   assert.throws(() => dmyToIso('2011-06-03'));
   const next = nextOccurrence(
     dmyToIso('18.11.1991'),
@@ -138,8 +135,6 @@ test('month summary includes fixed costs, days, categories and budget', () => {
   const empty = summarizeMonth({ month: '2026-11', invoices: [], fixed: [] });
   assert.equal(empty.budgetCents, null);
   assert.equal(empty.remainingCents, null);
-  const compared = compareMonths(summary, empty);
-  assert.equal(compared[0]?.previousCents, 0);
 });
 
 test('sum mismatch is the printed total minus the lines', () => {

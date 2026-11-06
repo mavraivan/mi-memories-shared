@@ -1,42 +1,60 @@
 import { z } from 'zod';
-import { EXPENSE_CATEGORIES, LIMITS } from './constants';
+import { EXPENSE_CATEGORIES, GAME_CHAPTER_COUNT, LIMITS } from './constants';
 import type { ExpenseCategory } from './domain';
 
-export const emailSchema = z.string().trim().min(3, 'Upiši e-mail');
-export const passwordSchema = z
-  .string()
-  .min(LIMITS.passwordMin, 'Najmanje 6 znakova');
-export const displayNameSchema = z.string().trim().min(2, 'Kako te zovu?');
-
-export const loginSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-});
-
-export const registerSchema = loginSchema.extend({
-  name: displayNameSchema,
-});
+export const localeSchema = z.enum(['hr', 'en']);
 
 export const chatBody = z.object({
   message: z.string().trim().min(1).max(LIMITS.aiMessageMax),
-  threadId: z.string().uuid().optional(),
-  mode: z.string().optional(),
-  locale: z.enum(['hr', 'en']).optional(),
+  locale: localeSchema.optional(),
+  /** Chosen by the client once per question, so a retry cannot save it twice. */
+  requestId: z.uuid().optional(),
 });
 
 export const memoryTextBody = z.object({
-  title: z.string().optional(),
-  body: z.string().optional(),
-  location: z.string().optional(),
-  date: z.string().optional(),
-  locale: z.enum(['hr', 'en']).optional(),
+  title: z.string().max(LIMITS.memoryTextMax).optional(),
+  body: z.string().max(LIMITS.memoryTextMax).optional(),
+  location: z.string().max(LIMITS.memoryTextMax).optional(),
+  date: z.string().max(40).optional(),
+  locale: localeSchema.optional(),
+});
+
+/** Device registration. `userId` must match the caller when it is sent. */
+export const deviceBody = z.object({
+  userId: z.string().uuid().optional(),
+  token: z.string().min(8).max(4096),
+  platform: z.enum(['ios', 'android']),
+  deviceId: z.string().max(200).optional(),
+  appVersion: z.string().max(40).optional(),
+  locale: z.string().max(16).optional(),
+  timezone: z.string().max(64).optional(),
+  enabled: z.boolean().optional(),
+});
+
+export const gameEventBody = z.object({
+  kind: z.enum(['score', 'achievement', 'chapter']),
+  /** The column is a 32-bit integer. */
+  score: z.number().int().min(0).max(2_147_483_647).optional(),
+  chapter: z.string().max(120).optional(),
+  chapterIndex: z.number().int().min(1).max(GAME_CHAPTER_COUNT).optional(),
+  title: z.string().max(120).optional(),
 });
 
 export const expenseCategorySchema = z.enum(
   EXPENSE_CATEGORIES as unknown as [ExpenseCategory, ...ExpenseCategory[]],
 );
 
-const isoDaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+/** A day the calendar really has. Postgres would refuse 2026-02-31 later. */
+export const isoDaySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine(value => {
+    const parsed = new Date(`${value}T00:00:00Z`);
+    return (
+      !Number.isNaN(parsed.getTime()) &&
+      parsed.toISOString().slice(0, 10) === value
+    );
+  });
 const timeSchema = z.string().regex(/^\d{2}:\d{2}$/);
 
 /**
@@ -49,13 +67,13 @@ export const RECEIPT_PATH =
 /** The object key must stay inside the caller's space. */
 export const receiptBody = z.object({
   storagePath: z.string().max(512).regex(RECEIPT_PATH),
-  locale: z.enum(['hr', 'en']).optional(),
+  locale: localeSchema.optional(),
   mimeType: z.string().max(80).optional(),
 });
 
 export const expenseCategorizeBody = z.object({
   store: z.string().trim().max(120).optional(),
-  locale: z.enum(['hr', 'en']).optional(),
+  locale: localeSchema.optional(),
   items: z
     .array(
       z.object({
@@ -155,35 +173,45 @@ export const aiProposedWriteSchema = z.object({
 export const aiModelReplySchema = z.object({
   reply: z.string().min(1),
   citations: z.array(z.string()).default([]),
-  itinerary: z
-    .object({
-      destination: z.string(),
-      days: z
-        .array(
-          z.object({
-            day: z.number().int().min(1),
-            title: z.string(),
-            items: z.array(z.string()),
-          }),
-        )
-        .max(LIMITS.itineraryDaysMax),
-    })
-    .optional()
-    .nullable(),
   proposedWrites: z.array(aiProposedWriteSchema).default([]),
 });
 
-export const planPayloadSchema = z.object({
-  title: z.string().trim().min(1).max(160),
-  notes: z.string().optional(),
-  type: z
-    .enum(['trip', 'date_night', 'home', 'purchase', 'task', 'dream', 'other'])
-    .default('other'),
-  date: isoDaySchema.optional(),
-  items: z.array(z.string()).optional(),
+/** Absent, or the app's own "not set". A real value must be a real day. */
+const optionalDay = isoDaySchema.or(z.literal('')).optional();
+const optionalText = z.string().max(500).optional();
+/** The app falls back to the summary when the model left the title out. */
+const proposedTitle = z.string().trim().max(160).optional();
+
+export const planPayloadSchema = z.looseObject({
+  title: proposedTitle,
+  notes: z.string().max(2000).optional(),
+  date: optionalDay,
+  location: optionalText,
+  items: z.array(z.string().max(200)).max(50).optional(),
 });
 
-export type LoginValues = z.infer<typeof loginSchema>;
-export type RegisterValues = z.infer<typeof registerSchema>;
+/**
+ * What the app can write for each proposal. The model's payload was unchecked
+ * until now, so a bad date reached the database only after the person confirmed.
+ */
+export const aiWritePayloadSchemas = {
+  plan: planPayloadSchema,
+  trip: z.looseObject({
+    title: proposedTitle,
+    destination: optionalText,
+    startsOn: optionalDay,
+    endsOn: optionalDay,
+  }),
+  important_date: z.looseObject({
+    title: proposedTitle,
+    date: isoDaySchema,
+  }),
+  wishlist: z.looseObject({
+    title: proposedTitle,
+    destination: optionalText,
+    reason: optionalText,
+  }),
+} as const;
+
 export type ReceiptModelOutput = z.infer<typeof receiptModelSchema>;
 export type AiModelReply = z.infer<typeof aiModelReplySchema>;

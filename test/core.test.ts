@@ -1,16 +1,24 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  aiWritePayloadSchemas,
+  apiErrorSchema,
+  chatBody,
   daysUntil,
+  deviceBody,
   encodeCursor,
-  loginSchema,
-  occurrenceKey,
+  gameEventBody,
+  isoDaySchema,
+  memoryTextBody,
+  nextOccurrence,
   pageBy,
   paginate,
   replyWithoutRecordIds,
   sameMonthDay,
   storagePath,
   receiptBody,
+  yearsAt,
+  zagrebDay,
 } from '../src/index';
 
 test('a reply never shows record ids', () => {
@@ -21,13 +29,6 @@ test('a reply never shows record ids', () => {
     'brvnaru s jacuzzijem. Tamo možete uživati.',
   );
   assert.equal(replyWithoutRecordIds('Samo tekst.'), 'Samo tekst.');
-});
-
-test('occurrence key stays stable across retries', () => {
-  assert.equal(
-    occurrenceKey('sched-1', '2026-06-12T06:00:00.000Z'),
-    'sched-1:2026-06-12T06:00:00.000Z',
-  );
 });
 
 test('pagination cursor stops on the last page', () => {
@@ -87,17 +88,6 @@ test('storage path is space scoped', () => {
   );
 });
 
-test('login schema trims email and rejects a short password', () => {
-  assert.equal(
-    loginSchema.parse({ email: '  ana@mi.app ', password: 'tajna1' }).email,
-    'ana@mi.app',
-  );
-  assert.equal(
-    loginSchema.safeParse({ email: 'ana@mi.app', password: '123' }).success,
-    false,
-  );
-});
-
 test('a receipt path is one object inside a space', () => {
   const space = '11111111-2222-4333-8444-555555555555';
   const entity = '66666666-7777-4888-9999-000000000000';
@@ -123,4 +113,75 @@ test('a receipt path is one object inside a space', () => {
       storagePath,
     );
   }
+});
+
+test('a day must exist on the calendar', () => {
+  assert.equal(isoDaySchema.safeParse('2026-02-28').success, true);
+  assert.equal(isoDaySchema.safeParse('2028-02-29').success, true);
+  for (const day of ['2026-02-31', '2026-02-29', '2026-13-01', '2026-00-10']) {
+    assert.equal(isoDaySchema.safeParse(day).success, false, day);
+  }
+});
+
+test('a recurring date set in the future waits for its first day', () => {
+  const now = new Date(2026, 10, 6, 12);
+  for (const recurrence of ['yearly', 'monthly', 'weekly'] as const) {
+    const next = nextOccurrence('2030-06-15', recurrence, now);
+    assert.deepEqual(
+      [next.getFullYear(), next.getMonth(), next.getDate()],
+      [2030, 5, 15],
+      recurrence,
+    );
+    assert.equal(yearsAt('2030-06-15', next), 0);
+  }
+});
+
+test('the couple day is Zagreb, whatever the host zone', () => {
+  assert.equal(zagrebDay(new Date('2026-11-06T23:30:00Z')), '2026-11-07');
+  assert.equal(zagrebDay(new Date('2026-07-01T21:59:00Z')), '2026-07-01');
+  assert.equal(zagrebDay(new Date('2026-07-01T22:00:00Z')), '2026-07-02');
+});
+
+test('a proposal for a date needs a real day; optional days may be empty', () => {
+  const date = aiWritePayloadSchemas.important_date;
+  assert.equal(date.safeParse({ date: '2027-06-03' }).success, true);
+  assert.equal(date.safeParse({ date: '' }).success, false);
+  assert.equal(date.safeParse({}).success, false);
+  assert.equal(date.safeParse({ date: '2027-02-31' }).success, false);
+  const trip = aiWritePayloadSchemas.trip;
+  assert.equal(trip.safeParse({ startsOn: '' }).success, true);
+  assert.equal(trip.safeParse({ startsOn: 'soon' }).success, false);
+  assert.equal(aiWritePayloadSchemas.plan.safeParse({}).success, true);
+});
+
+test('request bodies are bounded', () => {
+  const token = 'x'.repeat(4097);
+  assert.equal(deviceBody.safeParse({ token, platform: 'ios' }).success, false);
+  assert.equal(
+    gameEventBody.safeParse({ kind: 'score', score: 2 ** 31 }).success,
+    false,
+  );
+  assert.equal(
+    memoryTextBody.safeParse({ body: 'x'.repeat(20_001) }).success,
+    false,
+  );
+});
+
+test('the app keeps working from a request with only message and locale', () => {
+  assert.deepEqual(chatBody.parse({ message: ' hej ', locale: 'hr' }), {
+    message: 'hej',
+    locale: 'hr',
+  });
+});
+
+test('an error keeps `error` a string, because the installed app needs that', () => {
+  assert.equal(
+    apiErrorSchema.safeParse({ error: 'http_429', code: 'rate_limited' })
+      .success,
+    true,
+  );
+  assert.equal(
+    apiErrorSchema.safeParse({ error: { code: 'rate_limited' } }).success,
+    false,
+  );
 });
