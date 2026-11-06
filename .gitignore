@@ -3,3 +3,6 @@ coverage
 .DS_Store
 *.log
 .husky/_
+
+# Local AI/planning context (never committed)
+.planning/

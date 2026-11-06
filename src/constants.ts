@@ -16,6 +16,8 @@ export const LIMITS = {
   aiContextMemories: 6,
   aiContextTrips: 3,
   scanStreakDays: 7,
+  /** Largest receipt image the server will read; the app checks before upload. */
+  receiptBytes: 12 * 1024 * 1024,
 } as const;
 
 export const COUPLE_THREAD_KIND = 'couple';

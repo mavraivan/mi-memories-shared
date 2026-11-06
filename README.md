@@ -178,3 +178,7 @@ src/ids.ts          createId
 test/core.test.ts
 tsconfig.json
 ```
+
+## Code style
+
+Formatting, imports, naming, error handling and state patterns are written down in [docs/STYLE.md](docs/STYLE.md).

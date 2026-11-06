@@ -32,25 +32,6 @@ export const memoryTextBody = z.object({
   locale: z.enum(['hr', 'en']).optional(),
 });
 
-export const tripIdeasBody = z.object({
-  season: z.string().optional(),
-  notes: z.string().optional(),
-  locale: z.enum(['hr', 'en']).optional(),
-});
-
-export const itineraryBody = z.object({
-  destination: z.string().trim().min(2),
-  days: z.number().int().min(1).max(LIMITS.itineraryDaysMax).default(4),
-  notes: z.string().optional(),
-  locale: z.enum(['hr', 'en']).optional(),
-});
-
-export const recapBody = z.object({
-  period: z.enum(['month', 'year']).default('year'),
-  year: z.number().int().optional(),
-  locale: z.enum(['hr', 'en']).optional(),
-});
-
 export const expenseCategorySchema = z.enum(
   EXPENSE_CATEGORIES as unknown as [ExpenseCategory, ...ExpenseCategory[]],
 );
