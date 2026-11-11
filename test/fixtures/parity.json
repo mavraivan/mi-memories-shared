@@ -135,16 +135,43 @@
       }
     },
     {
-      "name": "lines above the printed total never make a negative other",
+      "name": "lines above the printed total shrink to it",
       "invoices": [
         {
           "totalCents": 1000,
-          "items": [{ "amountCents": 1200, "category": "food" }]
+          "items": [
+            { "amountCents": 900, "category": "food" },
+            { "amountCents": 300, "category": "household" }
+          ]
         }
       ],
       "expected": {
         "totalCents": 1000,
-        "byCategory": [{ "category": "food", "cents": 1200 }]
+        "byCategory": [
+          { "category": "food", "cents": 750 },
+          { "category": "household", "cents": 250 }
+        ]
+      }
+    },
+    {
+      "name": "leftover cents go to the largest category, ties by name",
+      "invoices": [
+        {
+          "totalCents": 1000,
+          "items": [
+            { "amountCents": 500, "category": "household" },
+            { "amountCents": 500, "category": "food" },
+            { "amountCents": 200, "category": "cosmetics" }
+          ]
+        }
+      ],
+      "expected": {
+        "totalCents": 1000,
+        "byCategory": [
+          { "category": "food", "cents": 418 },
+          { "category": "household", "cents": 416 },
+          { "category": "cosmetics", "cents": 166 }
+        ]
       }
     }
   ]

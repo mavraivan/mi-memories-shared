@@ -98,10 +98,42 @@ export function invoiceCategories(
     cents: item.amountCents,
   }));
   const rest = sumMismatch(invoice.totalCents, invoice.items);
-  if (rest !== 0) {
+  if (rest > 0) {
     lines.push({ category: 'other', cents: rest });
   }
-  return lines;
+  return rest < 0 ? shrinkToTotal(lines, invoice.totalCents) : lines;
+}
+
+/**
+ * Lines above the printed total (usually a discount the reader missed) shrink
+ * to it per category, so no category outgrows the receipt. Each share is
+ * floored and the leftover cents go to the largest category, ties by name.
+ * expense_overview and ai_month_spend do the same in SQL.
+ */
+function shrinkToTotal(
+  lines: { category: ExpenseCategory; cents: number }[],
+  totalCents: number,
+): { category: ExpenseCategory; cents: number }[] {
+  const byCategory = new Map<ExpenseCategory, number>();
+  let linesCents = 0;
+  for (const line of lines) {
+    byCategory.set(
+      line.category,
+      (byCategory.get(line.category) ?? 0) + line.cents,
+    );
+    linesCents += line.cents;
+  }
+  const shrunk = [...byCategory.entries()]
+    .sort(([a, aCents], [b, bCents]) =>
+      bCents !== aCents ? bCents - aCents : a < b ? -1 : 1,
+    )
+    .map(([category, cents]) => ({
+      category,
+      cents: Math.floor((cents * totalCents) / linesCents),
+    }));
+  shrunk[0]!.cents +=
+    totalCents - shrunk.reduce((sum, line) => sum + line.cents, 0);
+  return shrunk;
 }
 
 export function summarizeInvoices(invoices: ExpenseInvoice[]): ExpenseOverview {
@@ -208,6 +240,31 @@ export function summarizeMonth(input: {
 
 export function dailySeries(summary: MonthSummary): number[] {
   return monthDays(summary.month).map(day => summary.byDay[day] ?? 0);
+}
+
+/** One category's cents per day, split the same way as the month's category totals. */
+export function categoryDailySeries(input: {
+  month: string;
+  invoices: ExpenseInvoice[];
+  fixed: ExpenseFixed[];
+  category: ExpenseCategory;
+}): number[] {
+  const byDay: Record<string, number> = {};
+  for (const invoice of input.invoices) {
+    for (const line of invoiceCategories(invoice)) {
+      if (line.category === input.category) {
+        byDay[invoice.purchasedOn] =
+          (byDay[invoice.purchasedOn] ?? 0) + line.cents;
+      }
+    }
+  }
+  for (const occurrence of fixedOccurrences(input.fixed, input.month)) {
+    if (occurrence.category === input.category) {
+      byDay[occurrence.day] =
+        (byDay[occurrence.day] ?? 0) + occurrence.amountCents;
+    }
+  }
+  return monthDays(input.month).map(day => byDay[day] ?? 0);
 }
 
 function addDays(day: string, delta: number): string {

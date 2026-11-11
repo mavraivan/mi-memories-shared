@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  categoryDailySeries,
   computeBadges,
   dailySeries,
   dmyToIso,
@@ -135,6 +136,32 @@ test('month summary includes fixed costs, days, categories and budget', () => {
   const empty = summarizeMonth({ month: '2026-11', invoices: [], fixed: [] });
   assert.equal(empty.budgetCents, null);
   assert.equal(empty.remainingCents, null);
+});
+
+test('a day whose lines exceed the printed totals never shows more than it spent', () => {
+  const invoices = [
+    invoice('lidl', '2026-11-09', 599, [['Kruh', 999, 'food']]),
+    invoice('konzum', '2026-11-09', 2504, [
+      ['Mlijeko', 2513, 'food'],
+      ['Spužve', 1000, 'household'],
+    ]),
+  ];
+  const summary = summarizeMonth({ month: '2026-11', invoices, fixed: [] });
+  const food = categoryDailySeries({
+    month: '2026-11',
+    invoices,
+    fixed: [],
+    category: 'food',
+  })[8];
+  const household = summary.byCategory.find(
+    entry => entry.category === 'household',
+  );
+  assert.equal(summary.byDay['2026-11-09'], 3103);
+  assert.equal(food! + household!.cents, 3103);
+  assert.equal(
+    summary.byCategory.reduce((sum, entry) => sum + entry.cents, 0),
+    3103,
+  );
 });
 
 test('sum mismatch is the printed total minus the lines', () => {
