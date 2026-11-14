@@ -27,6 +27,7 @@ export type NotificationType =
   | 'on_this_day'
   | 'ai'
   | 'game'
+  | 'shopping'
   | 'system';
 
 export type Profile = {
