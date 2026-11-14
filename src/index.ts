@@ -6,3 +6,4 @@ export * from './expenses';
 export * from './ids';
 export * from './pagination';
 export * from './schemas';
+export * from './shopping';
